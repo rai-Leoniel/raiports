@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   FileText,
@@ -8,47 +8,44 @@ import {
   Eye,
   RotateCcw,
   ArrowLeft,
-} from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import * as XLSX from 'xlsx';
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import * as XLSX from "xlsx";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { reportsData } from '../reports-data';
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { reportsData } from "../reports-data";
 
 type Category = (typeof reportsData)[number];
 
 type TableColumn = {
   key: string;
   label: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
+  minWidth?: string;
 };
 
 type TableRow = Record<string, string | number>;
 
-type LoanReportDefinition = {
+type ReportDefinition = {
   columns: TableColumn[];
   rows: TableRow[];
 };
 
 const clearFieldsButtonClass =
-  'h-11 w-full sm:w-auto !border-[#d8cb77] !bg-[#efe39a] !text-[#3f3612] hover:!bg-[#e7da8d] hover:!text-[#3f3612]';
+  "h-11 w-full sm:w-auto !border-[#d8cb77] !bg-[#efe39a] !text-[#3f3612] hover:!bg-[#e7da8d] hover:!text-[#3f3612]";
 
-export default function CategoryPanel({
-  category,
-}: {
-  category: Category;
-}) {
+export default function CategoryPanel({ category }: { category: Category }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -57,7 +54,7 @@ export default function CategoryPanel({
 
   useEffect(() => {
     const checkTheme = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
+      setIsDark(document.documentElement.classList.contains("dark"));
     };
 
     checkTheme();
@@ -65,17 +62,16 @@ export default function CategoryPanel({
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ["class"],
     });
 
     return () => observer.disconnect();
   }, []);
 
   const defaultSection = category.sections[0] ?? null;
-
-  const sectionFromUrl = searchParams.get('section');
-  const reportFromUrl = searchParams.get('report');
-  const search = searchParams.get('search') ?? '';
+  const sectionFromUrl = searchParams.get("section");
+  const reportFromUrl = searchParams.get("report");
+  const search = searchParams.get("search") ?? "";
 
   const activeSection =
     category.sections.find((section) => section.key === sectionFromUrl) ??
@@ -93,7 +89,7 @@ export default function CategoryPanel({
     return activeSection.items.filter(
       (item) =>
         item.code.toLowerCase().includes(q) ||
-        item.name.toLowerCase().includes(q)
+        item.name.toLowerCase().includes(q),
     );
   }, [activeSection, search]);
 
@@ -159,11 +155,11 @@ export default function CategoryPanel({
     XLSX.utils.book_append_sheet(
       workbook,
       worksheet,
-      selectedReport.code.slice(0, 31)
+      selectedReport.code.slice(0, 31),
     );
 
     const safeFileName = `${selectedReport.code}-${selectedReport.name}`
-      .replace(/[\\/:*?"<>|]/g, '-')
+      .replace(/[\\/:*?"<>|]/g, "-")
       .trim();
 
     XLSX.writeFile(workbook, `${safeFileName}.xlsx`);
@@ -179,7 +175,7 @@ export default function CategoryPanel({
     });
 
     return (
-      <div className="space-y-4">
+      <div className="w-full space-y-4 pt-2">
         <div className="flex items-center">
           <button
             type="button"
@@ -191,7 +187,7 @@ export default function CategoryPanel({
           </button>
         </div>
 
-        {renderFilterCard(category.key)}
+        {renderFilterCard(category.key, selectedReport.code)}
 
         <Card className="rounded-3xl border border-[#cfd6e4] bg-[#f8f8f9] shadow-none dark:border-white/10 dark:bg-[#0b1733]">
           <CardContent className="p-3 sm:p-4 md:p-6">
@@ -264,10 +260,10 @@ export default function CategoryPanel({
                   type="button"
                   onClick={() => handleSectionChange(section.key)}
                   className={cn(
-                    'rounded-full px-5 py-2 text-sm font-medium transition',
+                    "rounded-full px-5 py-2 text-sm font-medium transition",
                     isActive
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-[#e9edf4] text-slate-700 hover:bg-[#dde5ef] dark:bg-[#1a2748] dark:text-slate-200 dark:hover:bg-[#22345d]'
+                      ? "bg-orange-500 text-white"
+                      : "bg-[#e9edf4] text-slate-700 hover:bg-[#dde5ef] dark:bg-[#1a2748] dark:text-slate-200 dark:hover:bg-[#22345d]",
                   )}
                 >
                   {section.label}
@@ -311,8 +307,12 @@ export default function CategoryPanel({
   );
 }
 
-function renderFilterCard(categoryKey: string) {
-  if (isLoanCategory(categoryKey)) {
+function renderFilterCard(categoryKey: string, reportCode?: string) {
+  if (reportCode === "R1L01") {
+    return <R1L01FilterCard />;
+  }
+
+  if (isLoanCategory(categoryKey) || reportCode?.startsWith("R1L")) {
     return <LoanFilterCard />;
   }
 
@@ -324,11 +324,69 @@ function renderFilterCard(categoryKey: string) {
 }
 
 function isInventoryCategory(categoryKey: string) {
-  return categoryKey.toLowerCase().includes('inventory');
+  return categoryKey.toLowerCase().includes("inventory");
 }
 
 function isLoanCategory(categoryKey: string) {
-  return categoryKey.toLowerCase().includes('loan');
+  return categoryKey.toLowerCase().includes("loan");
+}
+
+function R1L01FilterCard() {
+  return (
+    <Card className="rounded-[32px] border border-[#cfd6e4] bg-[#f8f8f9] shadow-none dark:border-white/10 dark:bg-[#0b1733]">
+      <CardContent className="p-5 sm:p-6 md:p-7">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2 xl:grid-cols-12">
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              By Branch
+            </label>
+            <Select defaultValue="default-branch">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default-branch">Select branch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              Entry Date From
+            </label>
+            <Input
+              type="date"
+              aria-label="Entry date from"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
+            />
+          </div>
+
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              Entry Date To
+            </label>
+            <Input
+              type="date"
+              aria-label="Entry date to"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <Button className="h-11 w-full rounded-xl bg-[#1570ef] px-5 text-white hover:bg-[#155fcb] sm:w-auto dark:bg-[#1d6fe5] dark:hover:bg-[#1a63cc]">
+            <Eye className="mr-2 h-4 w-4" />
+            Preview
+          </Button>
+
+          <Button variant="outline" className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Clear Fields
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function AccountingFilterCard() {
@@ -491,50 +549,49 @@ function InventoryFilterCard() {
 
 function LoanFilterCard() {
   return (
-    <Card className="rounded-3xl border border-[#cfd6e4] bg-[#f8f8f9] shadow-none dark:border-white/10 dark:bg-[#0b1733]">
-      <CardContent className="p-4 sm:p-5 md:p-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
+    <Card className="rounded-[32px] border border-[#cfd6e4] bg-[#f8f8f9] shadow-none dark:border-white/10 dark:bg-[#0b1733]">
+      <CardContent className="p-5 sm:p-6 md:p-7">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2 xl:grid-cols-12">
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               By Branch
             </label>
-            <Select defaultValue="dumaguete">
-              <SelectTrigger className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]">
+            <Select defaultValue="default-branch">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="dumaguete">DUMAGUETE</SelectItem>
-                <SelectItem value="head-office">HEAD OFFICE</SelectItem>
+                <SelectItem value="default-branch">Select branch</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               Date From
             </label>
             <Input
               type="date"
-              className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
             />
           </div>
 
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               Date To
             </label>
             <Input
               type="date"
-              className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
             />
           </div>
 
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               Interest Type
             </label>
             <Select defaultValue="all-interest">
-              <SelectTrigger className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
                 <SelectValue placeholder="Select interest type" />
               </SelectTrigger>
               <SelectContent>
@@ -544,11 +601,11 @@ function LoanFilterCard() {
           </div>
 
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               Loan Type
             </label>
             <Select defaultValue="all-loan-type">
-              <SelectTrigger className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
                 <SelectValue placeholder="Select loan type" />
               </SelectTrigger>
               <SelectContent>
@@ -558,11 +615,11 @@ function LoanFilterCard() {
           </div>
 
           <div className="min-w-0 space-y-2 xl:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
               Loan Class
             </label>
             <Select defaultValue="all-loan-class">
-              <SelectTrigger className="h-11 w-full border-[#d8dfea] bg-white dark:border-white/10 dark:bg-[#101d3d]">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
                 <SelectValue placeholder="Select loan class" />
               </SelectTrigger>
               <SelectContent>
@@ -570,18 +627,18 @@ function LoanFilterCard() {
               </SelectContent>
             </Select>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-2 pt-1 sm:flex-row xl:col-span-12 xl:justify-end">
-            <Button className="h-11 w-full bg-[#1570ef] text-white hover:bg-[#155fcb] sm:w-auto dark:bg-[#1d6fe5] dark:hover:bg-[#1a63cc]">
-              <Eye className="mr-2 h-4 w-4" />
-              Preview
-            </Button>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <Button className="h-11 w-full rounded-xl bg-[#1570ef] px-5 text-white hover:bg-[#155fcb] sm:w-auto dark:bg-[#1d6fe5] dark:hover:bg-[#1a63cc]">
+            <Eye className="mr-2 h-4 w-4" />
+            Preview
+          </Button>
 
-            <Button variant="outline" className={clearFieldsButtonClass}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Clear Fields
-            </Button>
-          </div>
+          <Button variant="outline" className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Clear Fields
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -601,8 +658,8 @@ function getPreviewHtml({
   sectionLabel: string;
   isDark: boolean;
 }) {
-  if (reportCode.startsWith('R1L')) {
-    const definition = getLoanReportDefinition(reportCode);
+  if (reportCode.startsWith("R1L") || reportCode === "R1A06") {
+    const definition = getReportDefinition(reportCode);
 
     return buildLoanPreviewHtml({
       reportName,
@@ -612,7 +669,6 @@ function getPreviewHtml({
       rows: definition.rows,
     });
   }
-
   if (isInventoryCategory(categoryKey)) {
     return buildInventoryPreviewHtml(reportName, sectionLabel, isDark);
   }
@@ -631,22 +687,12 @@ function getExportRows({
   reportName: string;
   sectionLabel: string;
 }) {
-  if (reportCode.startsWith('R1L')) {
-    const definition = getLoanReportDefinition(reportCode);
-    return definition.rows;
+  if (reportCode.startsWith("R1L")) {
+    return getReportDefinition(reportCode).rows;
   }
 
   if (isInventoryCategory(categoryKey)) {
-    return [
-      {
-        'Trans. Date': '',
-        Reference: '',
-        'Item Code': '',
-        'Item Description': '',
-        Qty: '',
-        'Request By': '',
-      },
-    ];
+    return [];
   }
 
   if (isLoanCategory(categoryKey)) {
@@ -658,193 +704,176 @@ function getExportRows({
     ];
   }
 
-  return [
-    {
-      Date: '03/31/2026',
-      Reference: '',
-      Description: 'Balance Forwarded',
-      Debit: 0.0,
-      Credit: 0.0,
-      'Running Balance': 0.0,
-    },
-  ];
+  return [];
 }
 
-function getLoanReportDefinition(reportCode: string): LoanReportDefinition {
+function getReportDefinition(reportCode: string): ReportDefinition {
   switch (reportCode) {
-    case 'R1L01':
+    case "R1A06":
+  return {
+    columns: [
+      { key: "date", label: "Date", minWidth: "90px" },
+      { key: "supplierName", label: "Supplier Name", minWidth: "170px" },
+      { key: "address", label: "Address", minWidth: "170px" },
+      { key: "vatTin", label: "VAT REG. TIN", minWidth: "150px" },
+      { key: "orRefNo", label: "OR/Sales Inv./Ref No.", minWidth: "200px" },
+      { key: "expenseType", label: "Type of Expense", minWidth: "170px" },
+      {
+        key: "vatableAmount",
+        label: "Vatable Amount",
+        align: "right",
+        minWidth: "150px",
+      },
+      {
+        key: "inputTax",
+        label: "Input Tax",
+        align: "right",
+        minWidth: "120px",
+      },
+      {
+        key: "totalPurchases",
+        label: "Total Purchases",
+        align: "right",
+        minWidth: "160px",
+      },
+    ],
+    rows: [],
+  };
+      case "R1L01":
+    return {
+      columns: [
+        { key: "contractNumber", label: "Contract Number", minWidth: "120px" },
+        { key: "borrowerName", label: "Borrower's Name", minWidth: "180px" },
+        { key: "sched", label: "Sched", align: "center", minWidth: "80px" },
+        { key: "hold", label: "Hold", align: "center", minWidth: "80px" },
+        { key: "bank", label: "Bank", minWidth: "100px" },
+        { key: "monthlyAmortization", label: "Monthly Amortization", align: "right", minWidth: "140px" },
+        { key: "payment", label: "Payment", align: "right", minWidth: "120px" },
+        { key: "delinquentUncollectedPayment", label: "Delinquent Uncollected Payment", align: "right", minWidth: "160px" },
+        { key: "delinquentRemarks", label: "Delinquent Remarks / Other Remarks", minWidth: "190px" },
+        { key: "firstDueDate", label: "First Due Date", align: "center", minWidth: "120px" },
+        { key: "lastDueDate", label: "Last Due Date", align: "center", minWidth: "120px" },
+      ],
+      rows: [],
+    };
+
+    case "R1L02":
       return {
         columns: [
-          { key: 'applicationDate', label: 'Application Date' },
-          { key: 'applicationNo', label: 'Application No.' },
-          { key: 'borrowerName', label: 'Borrower Name' },
-          { key: 'loanType', label: 'Loan Type' },
-          { key: 'loanAmount', label: 'Loan Amount', align: 'right' },
-          { key: 'status', label: 'Status' },
-        ],
-        rows: [
+          { key: "loanType", label: "Loan Type" },
           {
-            applicationDate: '04/07/2026',
-            applicationNo: 'APP-0001',
-            borrowerName: '',
-            loanType: 'Salary Loan',
-            loanAmount: '15,000.00',
-            status: 'Pending',
+            key: "totalApplications",
+            label: "Total Applications",
+            align: "right",
           },
+          { key: "approved", label: "Approved", align: "right" },
+          { key: "pending", label: "Pending", align: "right" },
+          { key: "cancelled", label: "Cancelled", align: "right" },
+          { key: "totalAmount", label: "Total Amount", align: "right" },
         ],
+        rows: [],
       };
 
-    case 'R1L02':
+    case "R1L03":
       return {
         columns: [
-          { key: 'loanType', label: 'Loan Type' },
-          {
-            key: 'totalApplications',
-            label: 'Total Applications',
-            align: 'right',
-          },
-          { key: 'approved', label: 'Approved', align: 'right' },
-          { key: 'pending', label: 'Pending', align: 'right' },
-          { key: 'cancelled', label: 'Cancelled', align: 'right' },
-          { key: 'totalAmount', label: 'Total Amount', align: 'right' },
+          { key: "dateApplied", label: "Date Applied" },
+          { key: "applicationNo", label: "Application No." },
+          { key: "borrowerName", label: "Borrower Name" },
+          { key: "loanType", label: "Loan Type" },
+          { key: "loanAmount", label: "Loan Amount", align: "right" },
+          { key: "chequeStatus", label: "Cheque Status" },
+          { key: "remarks", label: "Remarks" },
         ],
-        rows: [
-          {
-            loanType: 'Salary Loan',
-            totalApplications: '12',
-            approved: '7',
-            pending: '3',
-            cancelled: '2',
-            totalAmount: '180,000.00',
-          },
-          {
-            loanType: 'Business Loan',
-            totalApplications: '5',
-            approved: '2',
-            pending: '1',
-            cancelled: '2',
-            totalAmount: '250,000.00',
-          },
-        ],
+        rows: [],
       };
 
-    case 'R1L03':
+    case "R1L04":
       return {
         columns: [
-          { key: 'dateApplied', label: 'Date Applied' },
-          { key: 'applicationNo', label: 'Application No.' },
-          { key: 'borrowerName', label: 'Borrower Name' },
-          { key: 'loanType', label: 'Loan Type' },
-          { key: 'loanAmount', label: 'Loan Amount', align: 'right' },
-          { key: 'chequeStatus', label: 'Cheque Status' },
-          { key: 'remarks', label: 'Remarks' },
+          { key: "releaseDate", label: "Release Date" },
+          { key: "applicationNo", label: "Application No." },
+          { key: "borrowerName", label: "Borrower Name" },
+          { key: "loanType", label: "Loan Type" },
+          { key: "loanAmount", label: "Loan Amount", align: "right" },
+          { key: "chequeNo", label: "Cheque No." },
+          { key: "releasedBy", label: "Released By" },
         ],
-        rows: [
-          {
-            dateApplied: '04/07/2026',
-            applicationNo: 'APP-0004',
-            borrowerName: '',
-            loanType: 'Business Loan',
-            loanAmount: '25,000.00',
-            chequeStatus: 'Unreleased',
-            remarks: 'Awaiting release schedule',
-          },
-        ],
+        rows: [],
       };
 
-    case 'R1L04':
-      return {
-        columns: [
-          { key: 'releaseDate', label: 'Release Date' },
-          { key: 'applicationNo', label: 'Application No.' },
-          { key: 'borrowerName', label: 'Borrower Name' },
-          { key: 'loanType', label: 'Loan Type' },
-          { key: 'loanAmount', label: 'Loan Amount', align: 'right' },
-          { key: 'chequeNo', label: 'Cheque No.' },
-          { key: 'releasedBy', label: 'Released By' },
-        ],
-        rows: [
-          {
-            releaseDate: '04/07/2026',
-            applicationNo: 'APP-0006',
-            borrowerName: '',
-            loanType: 'Salary Loan',
-            loanAmount: '18,500.00',
-            chequeNo: 'CHK-101234',
-            releasedBy: 'Cashier',
-          },
-        ],
-      };
+    case "R1L05":
+  return {
+    columns: [
+      { key: "date", label: "Date", minWidth: "80px" },
+      { key: "newP", label: "P", align: "center", minWidth: "55px" },
+      { key: "newA", label: "A", align: "center", minWidth: "55px" },
+      { key: "newS", label: "S", align: "center", minWidth: "55px" },
+      { key: "newB", label: "B", align: "center", minWidth: "55px" },
+      { key: "oldRL", label: "RL", align: "center", minWidth: "55px" },
+      { key: "oldLL", label: "LL", align: "center", minWidth: "55px" },
+      { key: "oldAL", label: "AL", align: "center", minWidth: "55px" },
+      { key: "oldEL", label: "EL", align: "center", minWidth: "55px" },
+      { key: "oldXB", label: "XB", align: "center", minWidth: "55px" },
+      { key: "ttl", label: "TTL", align: "center", minWidth: "65px" },
+      { key: "principalRelease", label: "Release", align: "right", minWidth: "100px" },
+      { key: "principalRunningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
+      { key: "netRelease", label: "Release", align: "right", minWidth: "100px" },
+      { key: "netRunningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
+      { key: "amountWithdrawn", label: "Amount Withdrawn", align: "right", minWidth: "120px" },
+      { key: "loanCurrentAccount", label: "Current Account", align: "right", minWidth: "120px" },
+      { key: "loanOverdueAccount", label: "Overdue Account", align: "right", minWidth: "120px" },
+      { key: "liqCurrentAccount", label: "Current Account", align: "right", minWidth: "120px" },
+      { key: "liqAdvancePayment", label: "Advance Payment", align: "right", minWidth: "120px" },
+      { key: "bankCharge", label: "Bank Charge", align: "right", minWidth: "90px" },
+      { key: "penalty", label: "Penalty", align: "right", minWidth: "90px" },
+      { key: "refund", label: "Refund", align: "right", minWidth: "90px" },
+      { key: "totalCollections", label: "Total Collections", align: "right", minWidth: "120px" },
+      { key: "runningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
+    ],
+    rows: [],
+  };
 
-    case 'R1L05':
+    case "R1L06":
       return {
         columns: [
-          { key: 'dateCancelled', label: 'Date Cancelled' },
-          { key: 'applicationNo', label: 'Application No.' },
-          { key: 'borrowerName', label: 'Borrower Name' },
-          { key: 'loanType', label: 'Loan Type' },
-          { key: 'loanAmount', label: 'Loan Amount', align: 'right' },
-          { key: 'cancelledBy', label: 'Cancelled By' },
-          { key: 'remarks', label: 'Remarks' },
+          { key: "dateDisapproved", label: "Date Disapproved" },
+          { key: "applicationNo", label: "Application No." },
+          { key: "borrowerName", label: "Borrower Name" },
+          { key: "loanType", label: "Loan Type" },
+          { key: "loanAmount", label: "Loan Amount", align: "right" },
+          { key: "disapprovedBy", label: "Disapproved By" },
+          { key: "reason", label: "Reason" },
         ],
-        rows: [
-          {
-            dateCancelled: '04/07/2026',
-            applicationNo: 'APP-0008',
-            borrowerName: '',
-            loanType: 'Salary Loan',
-            loanAmount: '15,000.00',
-            cancelledBy: 'Admin',
-            remarks: 'Client request',
-          },
-          {
-            dateCancelled: '04/07/2026',
-            applicationNo: 'APP-0010',
-            borrowerName: '',
-            loanType: 'Business Loan',
-            loanAmount: '35,000.00',
-            cancelledBy: 'Branch Officer',
-            remarks: 'Incomplete follow-up documents',
-          },
-        ],
+        rows: [],
       };
-
-    case 'R1L06':
-      return {
-        columns: [
-          { key: 'dateDisapproved', label: 'Date Disapproved' },
-          { key: 'applicationNo', label: 'Application No.' },
-          { key: 'borrowerName', label: 'Borrower Name' },
-          { key: 'loanType', label: 'Loan Type' },
-          { key: 'loanAmount', label: 'Loan Amount', align: 'right' },
-          { key: 'disapprovedBy', label: 'Disapproved By' },
-          { key: 'reason', label: 'Reason' },
-        ],
-        rows: [
-          {
-            dateDisapproved: '04/07/2026',
-            applicationNo: 'APP-0012',
-            borrowerName: '',
-            loanType: 'Salary Loan',
-            loanAmount: '22,000.00',
-            disapprovedBy: 'Manager',
-            reason: 'Failed credit evaluation',
-          },
-        ],
-      };
+      case "R1L07":
+        return {
+          columns: [
+            { key: "clientId", label: "Client ID", minWidth: "110px" },
+            { key: "clientName", label: "Client Name", minWidth: "170px" },
+            { key: "refInvoice", label: "Ref. Invoice", minWidth: "130px" },
+            { key: "dateDue", label: "Date & Due", minWidth: "130px" },
+            { key: "loanPrincipal", label: "Loan Principal", align: "right", minWidth: "140px" },
+            { key: "interest", label: "Interest", align: "right", minWidth: "110px" },
+            { key: "days", label: "Days", align: "center", minWidth: "80px" },
+            { key: "overdue030", label: "0-30 Days", align: "right", minWidth: "100px" },
+            { key: "overdue3160", label: "31-60 Days", align: "right", minWidth: "110px" },
+            { key: "overdue6190", label: "61-90 Days", align: "right", minWidth: "110px" },
+            { key: "overdue91120", label: "91-120 Days", align: "right", minWidth: "110px" },
+            { key: "overdueOver120", label: "Over 120 Days", align: "right", minWidth: "120px" },
+            { key: "total", label: "TOTAL", align: "right", minWidth: "110px" },
+          ],
+          rows: [],
+        };
 
     default:
       return {
         columns: [
-          { key: 'report', label: 'Report' },
-          { key: 'remarks', label: 'Remarks' },
+          { key: "report", label: "Report" },
+          { key: "remarks", label: "Remarks" },
         ],
-        rows: [
-          {
-            report: reportCode,
-            remarks: 'No preview configuration yet.',
-          },
-        ],
+        rows: [],
       };
   }
 }
@@ -862,37 +891,108 @@ function buildLoanPreviewHtml({
   columns: TableColumn[];
   rows: TableRow[];
 }) {
-  const bodyBg = isDark ? '#0f172a' : '#ffffff';
-  const bodyText = isDark ? '#e5e7eb' : '#111827';
-  const sheetBg = isDark ? '#111827' : '#ffffff';
-  const sheetBorder = isDark ? '#475569' : '#94a3b8';
-  const lineColor = isDark ? '#cbd5e1' : '#000000';
-  const subtitleColor = isDark ? '#94a3b8' : '#64748b';
-  const headerBg = isDark ? '#1e293b' : '#f8fafc';
+  const bodyBg = isDark ? "#101d3d" : "#ffffff";
+  const bodyText = isDark ? "#f8fafc" : "#0f172a";
+  const sheetBg = isDark ? "#101d3d" : "#ffffff";
+  const sheetBorder = isDark ? "rgba(148, 163, 184, 0.38)" : "#d8dfea";
+  const tableBorder = isDark ? "rgba(226, 232, 240, 0.72)" : "#cbd5e1";
+  const headerBg = isDark ? "rgba(15, 23, 42, 0.58)" : "#f8fafc";
+  const mutedColor = isDark ? "#cbd5e1" : "#64748b";
+  const iconBorder = isDark ? "rgba(226, 232, 240, 0.25)" : "#d8dfea";
 
-  const theadHtml = columns
-    .map(
-      (column) =>
-        `<th class="${getAlignClass(column.align)}">${escapeHtml(column.label)}</th>`
-    )
-    .join('');
+ const theadHtml =
+  columns.some((c) => c.key === "newP")
+    ? `
+      <tr>
+        <th rowspan="4">Date</th>
+        <th colspan="10" class="center">NO. OF CLIENTS</th>
+        <th colspan="4" class="center">LOAN RELEASES</th>
+        <th colspan="10" class="center">LOAN COLLECTIONS</th>
+      </tr>
+      <tr>
+        <th colspan="4" class="center">New</th>
+        <th colspan="5" class="center">Old</th>
+        <th rowspan="3" class="center">TTL</th>
+        <th colspan="2" class="center">PRINCIPAL</th>
+        <th colspan="2" class="center">NET</th>
+        <th rowspan="3" class="center">Amount<br />Withdrawn</th>
+        <th colspan="2" class="center">Loan Payments</th>
+        <th colspan="2" class="center">Liquidation</th>
+        <th rowspan="3" class="center"><em>Bank<br />Charge</em></th>
+        <th rowspan="3" class="center">Penalty</th>
+        <th rowspan="3" class="center">Refund</th>
+        <th rowspan="3" class="center">Total<br />Collections</th>
+        <th rowspan="3" class="center"><em>Running<br />Balance</em></th>
+      </tr>
+      <tr>
+        <th rowspan="2" class="center">P</th>
+        <th rowspan="2" class="center">A</th>
+        <th rowspan="2" class="center">S</th>
+        <th rowspan="2" class="center">B</th>
+        <th rowspan="2" class="center">RL</th>
+        <th rowspan="2" class="center">LL</th>
+        <th rowspan="2" class="center">AL</th>
+        <th rowspan="2" class="center">EL</th>
+        <th rowspan="2" class="center">XB</th>
+        <th rowspan="2" class="center">Release</th>
+        <th rowspan="2" class="center"><em>Running<br />Balance</em></th>
+        <th rowspan="2" class="center">Release</th>
+        <th rowspan="2" class="center"><em>Running<br />Balance</em></th>
+        <th class="center">Current<br />Account</th>
+        <th class="center">Overdue<br />Account</th>
+        <th class="center">Current<br />Account</th>
+        <th class="center">Advance<br />Payment</th>
+      </tr>
+      <tr></tr>
+    `
+    : columns
+        .map((column) => {
+          const widthStyle = column.minWidth
+            ? ` style="min-width:${column.minWidth}"`
+            : "";
 
-  const tbodyHtml = rows
-    .map(
-      (row) => `
+          return `<th class="${getAlignClass(column.align)}"${widthStyle}>${escapeHtml(
+            column.label,
+          )}</th>`;
+        })
+        .join("");
+
+  const tbodyHtml =
+    rows.length > 0
+      ? rows
+          .map(
+            (row) => `
+              <tr>
+                ${columns
+                  .map((column) => {
+                    const value = row[column.key] ?? "";
+                    const widthStyle = column.minWidth
+                      ? ` style="min-width:${column.minWidth}"`
+                      : "";
+                    return `<td class="${getAlignClass(
+                      column.align,
+                    )}"${widthStyle}>${escapeHtml(String(value))}</td>`;
+                  })
+                  .join("")}
+              </tr>
+            `,
+          )
+          .join("")
+      : `
         <tr>
-          ${columns
-            .map((column) => {
-              const value = row[column.key] ?? '';
-              return `<td class="${getAlignClass(column.align)}">${escapeHtml(
-                String(value)
-              )}</td>`;
-            })
-            .join('')}
+          <td colspan="${columns.length}">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7.75C4 6.784 4.784 6 5.75 6h12.5C19.216 6 20 6.784 20 7.75v8.5c0 .966-.784 1.75-1.75 1.75H5.75A1.75 1.75 0 0 1 4 16.25v-8.5Z" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M4.5 13h4.2c.63 0 .96.28 1.22.74l.35.62c.24.42.55.64 1.1.64h1.26c.55 0 .86-.22 1.1-.64l.35-.62c.26-.46.59-.74 1.22-.74h4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span>No records available</span>
+            </div>
+          </td>
         </tr>
-      `
-    )
-    .join('');
+      `;
 
   return `
     <!doctype html>
@@ -902,147 +1002,227 @@ function buildLoanPreviewHtml({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>${escapeHtml(reportName)}</title>
         <style>
-          * {
-            box-sizing: border-box;
-          }
+          * { box-sizing: border-box; }
 
-          html, body {
+          html,
+          body {
             margin: 0;
             padding: 0;
           }
 
           body {
-            font-family: Arial, sans-serif;
-            padding: 12px;
+            min-width: 320px;
+            font-family: Arial, Helvetica, sans-serif;
             color: ${bodyText};
+            background: ${bodyBg};
+          }
+
+          .preview-shell {
+            min-height: 100vh;
+            padding: 16px;
             background: ${bodyBg};
           }
 
           .sheet {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1120px;
             margin: 0 auto;
             border: 1px dashed ${sheetBorder};
-            padding: 14px;
+            border-radius: 18px;
+            padding: 18px;
             background: ${sheetBg};
           }
 
           .company {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
             font-size: 13px;
             line-height: 1.45;
           }
 
+          .company-icon {
+            display: inline-flex;
+            width: 24px;
+            height: 24px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid ${iconBorder};
+            border-radius: 8px;
+            color: ${bodyText};
+            flex: 0 0 auto;
+          }
+
           .company strong {
+            display: block;
+            margin-bottom: 2px;
             font-size: 17px;
+            line-height: 1.25;
           }
 
           .header {
+            margin: 20px 0 18px;
             text-align: center;
-            margin: 12px 0 16px;
           }
 
           .header h1 {
             margin: 0;
-            font-size: clamp(24px, 5vw, 44px);
+            font-size: clamp(24px, 4.8vw, 44px);
             line-height: 1.12;
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: 0.01em;
             text-transform: uppercase;
-            word-break: break-word;
           }
 
           .subtitle {
-            margin-top: 6px;
+            margin-top: 5px;
             font-size: 13px;
-            color: ${subtitleColor};
+            color: ${mutedColor};
           }
 
           .table-wrap {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            border: 1px solid ${tableBorder};
+            border-radius: 10px;
           }
 
           table {
             width: 100%;
-            min-width: 760px;
+            min-width: ${columns.length >= 9 ? "1380px" : columns.length >= 7 ? "980px" : "780px"};
             border-collapse: collapse;
             font-size: 13px;
+            table-layout: auto;
           }
 
           th,
           td {
-            border: 1px solid ${lineColor};
-            padding: 8px 10px;
-            vertical-align: top;
-            white-space: normal;
-            word-break: break-word;
+            border-right: 1px solid ${tableBorder};
+            border-bottom: 1px solid ${tableBorder};
+            padding: 9px 10px;
+            vertical-align: middle;
+          }
+
+          th:last-child,
+          td:last-child {
+            border-right: none;
+          }
+
+          tbody tr:last-child td {
+            border-bottom: none;
           }
 
           th {
             background: ${headerBg};
+            font-size: 12px;
             font-weight: 700;
+            color: ${bodyText};
+            white-space: nowrap;
+            word-break: normal;
           }
 
-          .left {
-            text-align: left;
+          td {
+            color: ${bodyText};
+            white-space: normal;
+            word-break: break-word;
           }
 
-          .center {
+          .left { text-align: left; }
+          .center { text-align: center; }
+          .right { text-align: right; }
+
+          .empty-state {
+            min-height: 92px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: ${mutedColor};
             text-align: center;
           }
 
-          .right {
-            text-align: right;
+          .empty-icon {
+            display: inline-flex;
+            color: ${mutedColor};
           }
 
           @media (max-width: 640px) {
-            body {
-              padding: 8px;
+            .preview-shell {
+              padding: 10px;
             }
 
             .sheet {
+              border-radius: 14px;
               padding: 12px;
             }
 
             .company {
-              font-size: 12px;
+              font-size: 11px;
+              gap: 8px;
+            }
+
+            .company-icon {
+              width: 22px;
+              height: 22px;
+              border-radius: 7px;
             }
 
             .company strong {
-              font-size: 15px;
+              font-size: 14px;
+            }
+
+            .header {
+              margin: 16px 0 14px;
+            }
+
+            .header h1 {
+              font-size: clamp(19px, 7vw, 25px);
             }
 
             .subtitle {
-              font-size: 12px;
+              font-size: 11px;
             }
 
             table {
-              min-width: 680px;
+              min-width: ${columns.length >= 9 ? "1380px" : columns.length >= 7 ? "980px" : "680px"};
               font-size: 12px;
             }
 
             th,
             td {
-              padding: 7px 8px;
+              padding: 8px;
+            }
+
+            .empty-state {
+              min-height: 80px;
             }
           }
 
           @media print {
             body {
-              padding: 0;
               background: #ffffff;
               color: #111827;
             }
 
-            .sheet {
-              border: none;
+            .preview-shell {
+              min-height: auto;
               padding: 0;
+              background: #ffffff;
+            }
+
+            .sheet {
               max-width: none;
+              border: none;
+              border-radius: 0;
+              padding: 0;
               background: #ffffff;
             }
 
             .table-wrap {
               overflow: visible;
+              border: 1px solid #000000;
             }
 
             table {
@@ -1051,40 +1231,61 @@ function buildLoanPreviewHtml({
 
             th,
             td {
-              border: 1px solid #000000;
+              border-color: #000000;
+              color: #111827;
             }
 
             th {
               background: #f8fafc;
             }
+
+            .subtitle,
+            .empty-state,
+            .empty-icon {
+              color: #64748b;
+            }
+
+            .company-icon {
+              border-color: #cbd5e1;
+              color: #111827;
+            }
           }
         </style>
       </head>
       <body>
-        <div class="sheet">
-          <div class="company">
-            <strong>OCS Lending Inc</strong><br />
-            Dumaguete Branch<br />
-            053 Piñili St, Dumaguete City
-          </div>
+        <main class="preview-shell">
+          <section class="sheet">
+            <div class="company">
+              <span class="company-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-7h6v7M8 11h.01M12 11h.01M16 11h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <strong>Company Name</strong>
+                Branch Name<br />
+                Branch Address
+              </div>
+            </div>
 
-          <div class="header">
-            <h1>${escapeHtml(reportName)}</h1>
-            <div class="subtitle">Period Covered: April 07, 2026 to April 07, 2026</div>
-            <div class="subtitle">${escapeHtml(sectionLabel)}</div>
-          </div>
+            <div class="header">
+              <h1>${escapeHtml(reportName)}</h1>
+              <div class="subtitle">Period Covered</div>
+              <div class="subtitle">${escapeHtml(sectionLabel)}</div>
+            </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>${theadHtml}</tr>
-              </thead>
-              <tbody>
-                ${tbodyHtml}
-              </tbody>
-            </table>
-          </div>
-        </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>${theadHtml}</tr>
+                </thead>
+                <tbody>
+                  ${tbodyHtml}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
       </body>
     </html>
   `;
@@ -1093,14 +1294,14 @@ function buildLoanPreviewHtml({
 function buildAccountingPreviewHtml(
   reportName: string,
   sectionLabel: string,
-  isDark: boolean
+  isDark: boolean,
 ) {
-  const bodyBg = isDark ? '#0f172a' : '#ffffff';
-  const bodyText = isDark ? '#e5e7eb' : '#111827';
-  const sheetBg = isDark ? '#111827' : '#ffffff';
-  const sheetBorder = isDark ? '#475569' : '#94a3b8';
-  const lineColor = isDark ? '#cbd5e1' : '#000000';
-  const subtitleColor = isDark ? '#94a3b8' : '#64748b';
+  const bodyBg = isDark ? "#0f172a" : "#ffffff";
+  const bodyText = isDark ? "#e5e7eb" : "#111827";
+  const sheetBg = isDark ? "#111827" : "#ffffff";
+  const sheetBorder = isDark ? "#475569" : "#94a3b8";
+  const lineColor = isDark ? "#cbd5e1" : "#000000";
+  const subtitleColor = isDark ? "#94a3b8" : "#64748b";
 
   return `
     <!doctype html>
@@ -1199,12 +1400,8 @@ function buildAccountingPreviewHtml(
               max-width: none;
               background: #ffffff;
             }
-            .table-wrap {
-              overflow: visible;
-            }
-            table {
-              min-width: 0;
-            }
+            .table-wrap { overflow: visible; }
+            table { min-width: 0; }
             thead tr {
               border-top: 1px solid #000;
               border-bottom: 1px solid #000;
@@ -1219,8 +1416,8 @@ function buildAccountingPreviewHtml(
         <div class="sheet">
           <div class="top">
             <div>
-              <strong>OCS Lending Inc.</strong><br />
-              HEAD OFFICE
+              <strong>Company Name</strong><br />
+              Branch Name
             </div>
             <div class="title">
               <h1>${escapeHtml(reportName)}</h1>
@@ -1242,12 +1439,9 @@ function buildAccountingPreviewHtml(
               </thead>
               <tbody>
                 <tr>
-                  <td>03/31/2026</td>
-                  <td></td>
-                  <td>Balance Forwarded</td>
-                  <td class="right">0.00</td>
-                  <td class="right">0.00</td>
-                  <td class="right">0.00</td>
+                  <td colspan="6" style="text-align:center;padding:32px 8px;color:${subtitleColor};">
+                    No records available
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1261,14 +1455,14 @@ function buildAccountingPreviewHtml(
 function buildInventoryPreviewHtml(
   reportName: string,
   sectionLabel: string,
-  isDark: boolean
+  isDark: boolean,
 ) {
-  const bodyBg = isDark ? '#0f172a' : '#ffffff';
-  const bodyText = isDark ? '#e5e7eb' : '#111827';
-  const sheetBg = isDark ? '#111827' : '#ffffff';
-  const sheetBorder = isDark ? '#475569' : '#94a3b8';
-  const lineColor = isDark ? '#cbd5e1' : '#000000';
-  const subtitleColor = isDark ? '#94a3b8' : '#64748b';
+  const bodyBg = isDark ? "#0f172a" : "#ffffff";
+  const bodyText = isDark ? "#e5e7eb" : "#111827";
+  const sheetBg = isDark ? "#111827" : "#ffffff";
+  const sheetBorder = isDark ? "#475569" : "#94a3b8";
+  const lineColor = isDark ? "#cbd5e1" : "#000000";
+  const subtitleColor = isDark ? "#94a3b8" : "#64748b";
 
   return `
     <!doctype html>
@@ -1372,12 +1566,8 @@ function buildInventoryPreviewHtml(
               max-width: none;
               background: #ffffff;
             }
-            .table-wrap {
-              overflow: visible;
-            }
-            table {
-              min-width: 0;
-            }
+            .table-wrap { overflow: visible; }
+            table { min-width: 0; }
             thead tr {
               border-top: 1px solid #000;
               border-bottom: 1px solid #000;
@@ -1392,19 +1582,19 @@ function buildInventoryPreviewHtml(
         <div class="sheet">
           <div class="top">
             <div>
-              <strong>OCS Lending Inc.</strong><br />
-              HEAD OFFICE
+              <strong>Company Name</strong><br />
+              Branch Name
               <div class="title"><h1>${escapeHtml(reportName)}</h1></div>
             </div>
             <div class="meta">
-              ADMIN<br />
+              Generated By<br />
               Page 1 of 1<br />
-              4/16/2026 11:05:10 AM
+              Generated Date
             </div>
           </div>
 
           <div class="range">
-            <strong>Transaction Date(s):</strong> 2026-04-01 to 2026-04-16
+            <strong>Transaction Date(s):</strong> Date range
             <div class="section-label">${escapeHtml(sectionLabel)}</div>
           </div>
 
@@ -1435,17 +1625,17 @@ function buildInventoryPreviewHtml(
   `;
 }
 
-function getAlignClass(align?: 'left' | 'center' | 'right') {
-  if (align === 'center') return 'center';
-  if (align === 'right') return 'right';
-  return 'left';
+function getAlignClass(align?: "left" | "center" | "right") {
+  if (align === "center") return "center";
+  if (align === "right") return "right";
+  return "left";
 }
 
 function escapeHtml(value: string) {
   return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
