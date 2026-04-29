@@ -312,11 +312,15 @@ function renderFilterCard(categoryKey: string, reportCode?: string) {
     return <R1L01FilterCard />;
   }
 
+  if (isSalesCategory(categoryKey) || isSalesReport(reportCode)) {
+    return <SalesFilterCard />;
+  }
+
   if (isLoanCategory(categoryKey) || reportCode?.startsWith("R1L")) {
     return <LoanFilterCard />;
   }
 
-  if (isInventoryCategory(categoryKey)) {
+  if (isInventoryCategory(categoryKey) || reportCode?.startsWith("R1I")) {
     return <InventoryFilterCard />;
   }
 
@@ -329,6 +333,29 @@ function isInventoryCategory(categoryKey: string) {
 
 function isLoanCategory(categoryKey: string) {
   return categoryKey.toLowerCase().includes("loan");
+}
+
+function isSalesCategory(categoryKey: string) {
+  return categoryKey.toLowerCase().includes("sales");
+}
+
+function isSalesReport(reportCode?: string) {
+  if (!reportCode) return false;
+
+  return [
+    "R1000",
+    "R1S00",
+    "R2000",
+    "R2500",
+    "R3000",
+    "R3500",
+    "R4000",
+    "R4500",
+    "R5000",
+    "R5500",
+    "R6000",
+    "R6500",
+  ].includes(reportCode);
 }
 
 function R1L01FilterCard() {
@@ -379,7 +406,10 @@ function R1L01FilterCard() {
             Preview
           </Button>
 
-          <Button variant="outline" className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}>
+          <Button
+            variant="outline"
+            className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}
+          >
             <RotateCcw className="mr-2 h-4 w-4" />
             Clear Fields
           </Button>
@@ -635,7 +665,83 @@ function LoanFilterCard() {
             Preview
           </Button>
 
-          <Button variant="outline" className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}>
+          <Button
+            variant="outline"
+            className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Clear Fields
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SalesFilterCard() {
+  return (
+    <Card className="rounded-[32px] border border-[#cfd6e4] bg-[#f8f8f9] shadow-none dark:border-white/10 dark:bg-[#0b1733]">
+      <CardContent className="p-5 sm:p-6 md:p-7">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2 xl:grid-cols-12">
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              By Branch
+            </label>
+            <Select defaultValue="default-branch">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default-branch">Select branch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              Sales Date From
+            </label>
+            <Input
+              type="date"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
+            />
+          </div>
+
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              Sales Date To
+            </label>
+            <Input
+              type="date"
+              className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white"
+            />
+          </div>
+
+          <div className="min-w-0 space-y-2 xl:col-span-3">
+            <label className="text-sm font-semibold text-slate-700 dark:text-white">
+              Cashier / Staff
+            </label>
+            <Select defaultValue="all">
+              <SelectTrigger className="h-11 w-full rounded-xl border-[#d8dfea] bg-white text-slate-900 dark:border-white/10 dark:bg-[#101d3d] dark:text-white">
+                <SelectValue placeholder="Select cashier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <Button className="h-11 w-full rounded-xl bg-[#1570ef] px-5 text-white hover:bg-[#155fcb] sm:w-auto dark:bg-[#1d6fe5] dark:hover:bg-[#1a63cc]">
+            <Eye className="mr-2 h-4 w-4" />
+            Preview
+          </Button>
+
+          <Button
+            variant="outline"
+            className={`${clearFieldsButtonClass} rounded-xl sm:w-auto`}
+          >
             <RotateCcw className="mr-2 h-4 w-4" />
             Clear Fields
           </Button>
@@ -658,7 +764,14 @@ function getPreviewHtml({
   sectionLabel: string;
   isDark: boolean;
 }) {
-  if (reportCode.startsWith("R1L") || reportCode === "R1A06") {
+  if (
+    reportCode.startsWith("R1L") ||
+    reportCode.startsWith("R1I") ||
+    reportCode === "R1A06" ||
+    reportCode === "R1A061" ||
+    isSalesCategory(categoryKey) ||
+    isSalesReport(reportCode)
+  ) {
     const definition = getReportDefinition(reportCode);
 
     return buildLoanPreviewHtml({
@@ -669,6 +782,7 @@ function getPreviewHtml({
       rows: definition.rows,
     });
   }
+
   if (isInventoryCategory(categoryKey)) {
     return buildInventoryPreviewHtml(reportName, sectionLabel, isDark);
   }
@@ -687,89 +801,163 @@ function getExportRows({
   reportName: string;
   sectionLabel: string;
 }) {
-  if (reportCode.startsWith("R1L")) {
+  if (
+    reportCode.startsWith("R1L") ||
+    reportCode.startsWith("R1I") ||
+    reportCode.startsWith("R1A") ||
+    isSalesCategory(categoryKey) ||
+    isSalesReport(reportCode)
+  ) {
     return getReportDefinition(reportCode).rows;
   }
 
-  if (isInventoryCategory(categoryKey)) {
-    return [];
-  }
-
-  if (isLoanCategory(categoryKey)) {
-    return [
-      {
-        Report: reportName,
-        Section: sectionLabel,
-      },
-    ];
-  }
-
-  return [];
+  return [
+    {
+      Report: reportName,
+      Section: sectionLabel,
+    },
+  ];
 }
 
 function getReportDefinition(reportCode: string): ReportDefinition {
   switch (reportCode) {
     case "R1A06":
-  return {
-    columns: [
-      { key: "date", label: "Date", minWidth: "90px" },
-      { key: "supplierName", label: "Supplier Name", minWidth: "170px" },
-      { key: "address", label: "Address", minWidth: "170px" },
-      { key: "vatTin", label: "VAT REG. TIN", minWidth: "150px" },
-      { key: "orRefNo", label: "OR/Sales Inv./Ref No.", minWidth: "200px" },
-      { key: "expenseType", label: "Type of Expense", minWidth: "170px" },
-      {
-        key: "vatableAmount",
-        label: "Vatable Amount",
-        align: "right",
-        minWidth: "150px",
-      },
-      {
-        key: "inputTax",
-        label: "Input Tax",
-        align: "right",
-        minWidth: "120px",
-      },
-      {
-        key: "totalPurchases",
-        label: "Total Purchases",
-        align: "right",
-        minWidth: "160px",
-      },
-    ],
-    rows: [],
-  };
-      case "R1L01":
-    return {
-      columns: [
-        { key: "contractNumber", label: "Contract Number", minWidth: "120px" },
-        { key: "borrowerName", label: "Borrower's Name", minWidth: "180px" },
-        { key: "sched", label: "Sched", align: "center", minWidth: "80px" },
-        { key: "hold", label: "Hold", align: "center", minWidth: "80px" },
-        { key: "bank", label: "Bank", minWidth: "100px" },
-        { key: "monthlyAmortization", label: "Monthly Amortization", align: "right", minWidth: "140px" },
-        { key: "payment", label: "Payment", align: "right", minWidth: "120px" },
-        { key: "delinquentUncollectedPayment", label: "Delinquent Uncollected Payment", align: "right", minWidth: "160px" },
-        { key: "delinquentRemarks", label: "Delinquent Remarks / Other Remarks", minWidth: "190px" },
-        { key: "firstDueDate", label: "First Due Date", align: "center", minWidth: "120px" },
-        { key: "lastDueDate", label: "Last Due Date", align: "center", minWidth: "120px" },
-      ],
-      rows: [],
-    };
+      return {
+        columns: [
+          { key: "date", label: "Date", minWidth: "90px" },
+          { key: "supplierName", label: "Supplier Name", minWidth: "170px" },
+          { key: "address", label: "Address", minWidth: "170px" },
+          { key: "vatTin", label: "VAT REG. TIN", minWidth: "150px" },
+          { key: "orRefNo", label: "OR/Sales Inv./Ref No.", minWidth: "200px" },
+          { key: "expenseType", label: "Type of Expense", minWidth: "170px" },
+          {
+            key: "vatableAmount",
+            label: "Vatable Amount",
+            align: "right",
+            minWidth: "150px",
+          },
+          {
+            key: "inputTax",
+            label: "Input Tax",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "totalPurchases",
+            label: "Total Purchases",
+            align: "right",
+            minWidth: "160px",
+          },
+        ],
+        rows: [],
+      };
+
+    case "R1A061":
+      return {
+        columns: [
+          { key: "date", label: "Date", minWidth: "90px" },
+          { key: "borrowerName", label: "Borrower Name", minWidth: "180px" },
+          { key: "orNo", label: "OR No.", minWidth: "120px" },
+          { key: "tin", label: "TIN", minWidth: "130px" },
+          {
+            key: "loanCollection",
+            label: "Loan Collection",
+            align: "right",
+            minWidth: "150px",
+          },
+          {
+            key: "outputTax",
+            label: "Output Tax",
+            align: "right",
+            minWidth: "130px",
+          },
+          {
+            key: "totalAmount",
+            label: "Total Amount",
+            align: "right",
+            minWidth: "140px",
+          },
+        ],
+        rows: [],
+      };
+
+    case "R1A07":
+      return {
+        columns: [
+          { key: "accountNo", label: "Account No.", minWidth: "130px" },
+          { key: "accountName", label: "Account Name", minWidth: "180px" },
+          { key: "statementDate", label: "Statement Date", minWidth: "130px" },
+          { key: "reference", label: "Reference", minWidth: "130px" },
+          { key: "debit", label: "Debit", align: "right", minWidth: "120px" },
+          { key: "credit", label: "Credit", align: "right", minWidth: "120px" },
+          { key: "balance", label: "Balance", align: "right", minWidth: "130px" },
+        ],
+        rows: [],
+      };
+
+    case "R1A081":
+    case "R1A082":
+    case "R1A083":
+    case "R1A084":
+    case "R1A085":
+      return {
+        columns: [
+          { key: "date", label: "Date", minWidth: "100px" },
+          { key: "journalNo", label: "Journal No.", minWidth: "130px" },
+          { key: "accountCode", label: "Account Code", minWidth: "130px" },
+          { key: "accountName", label: "Account Name", minWidth: "180px" },
+          { key: "description", label: "Description", minWidth: "220px" },
+          { key: "remarks", label: "Remarks", minWidth: "180px" },
+        ],
+        rows: [],
+      };
+
+    case "R1L01":
+      return {
+        columns: [
+          { key: "contractNumber", label: "Contract Number", minWidth: "120px" },
+          { key: "borrowerName", label: "Borrower's Name", minWidth: "180px" },
+          { key: "sched", label: "Sched", align: "center", minWidth: "80px" },
+          { key: "hold", label: "Hold", align: "center", minWidth: "80px" },
+          { key: "bank", label: "Bank", minWidth: "100px" },
+          {
+            key: "monthlyAmortization",
+            label: "Monthly Amortization",
+            align: "right",
+            minWidth: "140px",
+          },
+          { key: "payment", label: "Payment", align: "right", minWidth: "120px" },
+          {
+            key: "delinquentUncollectedPayment",
+            label: "Delinquent Uncollected Payment",
+            align: "right",
+            minWidth: "160px",
+          },
+          {
+            key: "delinquentRemarks",
+            label: "Delinquent Remarks / Other Remarks",
+            minWidth: "190px",
+          },
+          { key: "firstDueDate", label: "First Due Date", align: "center", minWidth: "120px" },
+          { key: "lastDueDate", label: "Last Due Date", align: "center", minWidth: "120px" },
+        ],
+        rows: [],
+      };
 
     case "R1L02":
       return {
         columns: [
-          { key: "loanType", label: "Loan Type" },
+          { key: "loanType", label: "Loan Type", minWidth: "170px" },
           {
             key: "totalApplications",
             label: "Total Applications",
             align: "right",
+            minWidth: "150px",
           },
-          { key: "approved", label: "Approved", align: "right" },
-          { key: "pending", label: "Pending", align: "right" },
-          { key: "cancelled", label: "Cancelled", align: "right" },
-          { key: "totalAmount", label: "Total Amount", align: "right" },
+          { key: "approved", label: "Approved", align: "right", minWidth: "120px" },
+          { key: "pending", label: "Pending", align: "right", minWidth: "120px" },
+          { key: "cancelled", label: "Cancelled", align: "right", minWidth: "120px" },
+          { key: "totalAmount", label: "Total Amount", align: "right", minWidth: "140px" },
         ],
         rows: [],
       };
@@ -777,13 +965,13 @@ function getReportDefinition(reportCode: string): ReportDefinition {
     case "R1L03":
       return {
         columns: [
-          { key: "dateApplied", label: "Date Applied" },
-          { key: "applicationNo", label: "Application No." },
-          { key: "borrowerName", label: "Borrower Name" },
-          { key: "loanType", label: "Loan Type" },
-          { key: "loanAmount", label: "Loan Amount", align: "right" },
-          { key: "chequeStatus", label: "Cheque Status" },
-          { key: "remarks", label: "Remarks" },
+          { key: "dateApplied", label: "Date Applied", minWidth: "120px" },
+          { key: "applicationNo", label: "Application No.", minWidth: "140px" },
+          { key: "borrowerName", label: "Borrower Name", minWidth: "180px" },
+          { key: "loanType", label: "Loan Type", minWidth: "140px" },
+          { key: "loanAmount", label: "Loan Amount", align: "right", minWidth: "140px" },
+          { key: "chequeStatus", label: "Cheque Status", minWidth: "140px" },
+          { key: "remarks", label: "Remarks", minWidth: "180px" },
         ],
         rows: [],
       };
@@ -791,87 +979,236 @@ function getReportDefinition(reportCode: string): ReportDefinition {
     case "R1L04":
       return {
         columns: [
-          { key: "releaseDate", label: "Release Date" },
-          { key: "applicationNo", label: "Application No." },
-          { key: "borrowerName", label: "Borrower Name" },
-          { key: "loanType", label: "Loan Type" },
-          { key: "loanAmount", label: "Loan Amount", align: "right" },
-          { key: "chequeNo", label: "Cheque No." },
-          { key: "releasedBy", label: "Released By" },
+          { key: "releaseDate", label: "Release Date", minWidth: "120px" },
+          { key: "applicationNo", label: "Application No.", minWidth: "140px" },
+          { key: "borrowerName", label: "Borrower Name", minWidth: "180px" },
+          { key: "loanType", label: "Loan Type", minWidth: "140px" },
+          { key: "loanAmount", label: "Loan Amount", align: "right", minWidth: "140px" },
+          { key: "chequeNo", label: "Cheque No.", minWidth: "120px" },
+          { key: "releasedBy", label: "Released By", minWidth: "140px" },
         ],
         rows: [],
       };
 
     case "R1L05":
-  return {
-    columns: [
-      { key: "date", label: "Date", minWidth: "80px" },
-      { key: "newP", label: "P", align: "center", minWidth: "55px" },
-      { key: "newA", label: "A", align: "center", minWidth: "55px" },
-      { key: "newS", label: "S", align: "center", minWidth: "55px" },
-      { key: "newB", label: "B", align: "center", minWidth: "55px" },
-      { key: "oldRL", label: "RL", align: "center", minWidth: "55px" },
-      { key: "oldLL", label: "LL", align: "center", minWidth: "55px" },
-      { key: "oldAL", label: "AL", align: "center", minWidth: "55px" },
-      { key: "oldEL", label: "EL", align: "center", minWidth: "55px" },
-      { key: "oldXB", label: "XB", align: "center", minWidth: "55px" },
-      { key: "ttl", label: "TTL", align: "center", minWidth: "65px" },
-      { key: "principalRelease", label: "Release", align: "right", minWidth: "100px" },
-      { key: "principalRunningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
-      { key: "netRelease", label: "Release", align: "right", minWidth: "100px" },
-      { key: "netRunningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
-      { key: "amountWithdrawn", label: "Amount Withdrawn", align: "right", minWidth: "120px" },
-      { key: "loanCurrentAccount", label: "Current Account", align: "right", minWidth: "120px" },
-      { key: "loanOverdueAccount", label: "Overdue Account", align: "right", minWidth: "120px" },
-      { key: "liqCurrentAccount", label: "Current Account", align: "right", minWidth: "120px" },
-      { key: "liqAdvancePayment", label: "Advance Payment", align: "right", minWidth: "120px" },
-      { key: "bankCharge", label: "Bank Charge", align: "right", minWidth: "90px" },
-      { key: "penalty", label: "Penalty", align: "right", minWidth: "90px" },
-      { key: "refund", label: "Refund", align: "right", minWidth: "90px" },
-      { key: "totalCollections", label: "Total Collections", align: "right", minWidth: "120px" },
-      { key: "runningBalance", label: "Running Balance", align: "right", minWidth: "120px" },
-    ],
-    rows: [],
-  };
+      return {
+        columns: [
+          { key: "date", label: "Date", minWidth: "80px" },
+          { key: "newP", label: "P", align: "center", minWidth: "55px" },
+          { key: "newA", label: "A", align: "center", minWidth: "55px" },
+          { key: "newS", label: "S", align: "center", minWidth: "55px" },
+          { key: "newB", label: "B", align: "center", minWidth: "55px" },
+          { key: "oldRL", label: "RL", align: "center", minWidth: "55px" },
+          { key: "oldLL", label: "LL", align: "center", minWidth: "55px" },
+          { key: "oldAL", label: "AL", align: "center", minWidth: "55px" },
+          { key: "oldEL", label: "EL", align: "center", minWidth: "55px" },
+          { key: "oldXB", label: "XB", align: "center", minWidth: "55px" },
+          { key: "ttl", label: "TTL", align: "center", minWidth: "65px" },
+          { key: "principalRelease", label: "Release", align: "right", minWidth: "100px" },
+          {
+            key: "principalRunningBalance",
+            label: "Running Balance",
+            align: "right",
+            minWidth: "120px",
+          },
+          { key: "netRelease", label: "Release", align: "right", minWidth: "100px" },
+          {
+            key: "netRunningBalance",
+            label: "Running Balance",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "amountWithdrawn",
+            label: "Amount Withdrawn",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "loanCurrentAccount",
+            label: "Current Account",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "loanOverdueAccount",
+            label: "Overdue Account",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "liqCurrentAccount",
+            label: "Current Account",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "liqAdvancePayment",
+            label: "Advance Payment",
+            align: "right",
+            minWidth: "120px",
+          },
+          { key: "bankCharge", label: "Bank Charge", align: "right", minWidth: "90px" },
+          { key: "penalty", label: "Penalty", align: "right", minWidth: "90px" },
+          { key: "refund", label: "Refund", align: "right", minWidth: "90px" },
+          {
+            key: "totalCollections",
+            label: "Total Collections",
+            align: "right",
+            minWidth: "120px",
+          },
+          {
+            key: "runningBalance",
+            label: "Running Balance",
+            align: "right",
+            minWidth: "120px",
+          },
+        ],
+        rows: [],
+      };
 
     case "R1L06":
       return {
         columns: [
-          { key: "dateDisapproved", label: "Date Disapproved" },
-          { key: "applicationNo", label: "Application No." },
-          { key: "borrowerName", label: "Borrower Name" },
-          { key: "loanType", label: "Loan Type" },
-          { key: "loanAmount", label: "Loan Amount", align: "right" },
-          { key: "disapprovedBy", label: "Disapproved By" },
-          { key: "reason", label: "Reason" },
+          { key: "dateDisapproved", label: "Date Disapproved", minWidth: "140px" },
+          { key: "applicationNo", label: "Application No.", minWidth: "140px" },
+          { key: "borrowerName", label: "Borrower Name", minWidth: "180px" },
+          { key: "loanType", label: "Loan Type", minWidth: "140px" },
+          { key: "loanAmount", label: "Loan Amount", align: "right", minWidth: "140px" },
+          { key: "disapprovedBy", label: "Disapproved By", minWidth: "150px" },
+          { key: "reason", label: "Reason", minWidth: "180px" },
         ],
         rows: [],
       };
-      case "R1L07":
-        return {
-          columns: [
-            { key: "clientId", label: "Client ID", minWidth: "110px" },
-            { key: "clientName", label: "Client Name", minWidth: "170px" },
-            { key: "refInvoice", label: "Ref. Invoice", minWidth: "130px" },
-            { key: "dateDue", label: "Date & Due", minWidth: "130px" },
-            { key: "loanPrincipal", label: "Loan Principal", align: "right", minWidth: "140px" },
-            { key: "interest", label: "Interest", align: "right", minWidth: "110px" },
-            { key: "days", label: "Days", align: "center", minWidth: "80px" },
-            { key: "overdue030", label: "0-30 Days", align: "right", minWidth: "100px" },
-            { key: "overdue3160", label: "31-60 Days", align: "right", minWidth: "110px" },
-            { key: "overdue6190", label: "61-90 Days", align: "right", minWidth: "110px" },
-            { key: "overdue91120", label: "91-120 Days", align: "right", minWidth: "110px" },
-            { key: "overdueOver120", label: "Over 120 Days", align: "right", minWidth: "120px" },
-            { key: "total", label: "TOTAL", align: "right", minWidth: "110px" },
-          ],
-          rows: [],
-        };
+
+    case "R1L07":
+      return {
+        columns: [
+          { key: "clientId", label: "Client ID", minWidth: "110px" },
+          { key: "clientName", label: "Client Name", minWidth: "170px" },
+          { key: "refInvoice", label: "Ref. Invoice", minWidth: "130px" },
+          { key: "dateDue", label: "Date & Due", minWidth: "130px" },
+          {
+            key: "loanPrincipal",
+            label: "Loan Principal",
+            align: "right",
+            minWidth: "140px",
+          },
+          { key: "interest", label: "Interest", align: "right", minWidth: "110px" },
+          { key: "days", label: "Days", align: "center", minWidth: "80px" },
+          { key: "overdue030", label: "0-30 Days", align: "right", minWidth: "100px" },
+          { key: "overdue3160", label: "31-60 Days", align: "right", minWidth: "110px" },
+          { key: "overdue6190", label: "61-90 Days", align: "right", minWidth: "110px" },
+          { key: "overdue91120", label: "91-120 Days", align: "right", minWidth: "110px" },
+          {
+            key: "overdueOver120",
+            label: "Over 120 Days",
+            align: "right",
+            minWidth: "120px",
+          },
+          { key: "total", label: "TOTAL", align: "right", minWidth: "110px" },
+        ],
+        rows: [],
+      };
+
+    case "R1I01":
+      return {
+        columns: [
+          { key: "requestDate", label: "Request Date", minWidth: "120px" },
+          { key: "prNumber", label: "PR Number", minWidth: "130px" },
+          { key: "department", label: "Department", minWidth: "150px" },
+          { key: "requestedBy", label: "Requested By", minWidth: "150px" },
+          { key: "status", label: "Status", minWidth: "110px" },
+          { key: "remarks", label: "Remarks", minWidth: "180px" },
+        ],
+        rows: [],
+      };
+
+    case "R1I02":
+      return {
+        columns: [
+          { key: "prNumber", label: "PR Number", minWidth: "130px" },
+          { key: "requestDate", label: "Request Date", minWidth: "120px" },
+          { key: "supplier", label: "Supplier", minWidth: "170px" },
+          { key: "totalItems", label: "Total Items", align: "right", minWidth: "120px" },
+          { key: "totalAmount", label: "Total Amount", align: "right", minWidth: "140px" },
+          { key: "status", label: "Status", minWidth: "110px" },
+        ],
+        rows: [],
+      };
+
+    case "R1I03":
+      return {
+        columns: [
+          { key: "itemCode", label: "Item Code", minWidth: "120px" },
+          { key: "itemDescription", label: "Item Description", minWidth: "220px" },
+          { key: "unit", label: "Unit", minWidth: "90px" },
+          { key: "quantity", label: "Quantity", align: "right", minWidth: "110px" },
+          { key: "requestDate", label: "Request Date", minWidth: "120px" },
+          { key: "prNumber", label: "PR Number", minWidth: "130px" },
+        ],
+        rows: [],
+      };
+
+    case "R1000":
+    case "R1S00":
+    case "R2000":
+    case "R2500":
+      return {
+        columns: [
+          { key: "salesDate", label: "Sales Date", minWidth: "120px" },
+          { key: "invoiceNo", label: "Invoice No.", minWidth: "130px" },
+          { key: "customerName", label: "Customer Name", minWidth: "180px" },
+          { key: "cashier", label: "Cashier", minWidth: "140px" },
+          { key: "paymentType", label: "Payment Type", minWidth: "130px" },
+          { key: "grossSales", label: "Gross Sales", align: "right", minWidth: "130px" },
+          { key: "discount", label: "Discount", align: "right", minWidth: "110px" },
+          { key: "netSales", label: "Net Sales", align: "right", minWidth: "130px" },
+        ],
+        rows: [],
+      };
+
+    case "R3000":
+    case "R5500":
+    case "R6500":
+      return {
+        columns: [
+          { key: "salesDate", label: "Sales Date", minWidth: "120px" },
+          { key: "itemCode", label: "Item Code", minWidth: "120px" },
+          { key: "itemDescription", label: "Item Description", minWidth: "220px" },
+          { key: "brand", label: "Brand", minWidth: "130px" },
+          { key: "model", label: "Model", minWidth: "130px" },
+          { key: "quantity", label: "Qty", align: "right", minWidth: "90px" },
+          { key: "amount", label: "Amount", align: "right", minWidth: "130px" },
+        ],
+        rows: [],
+      };
+
+    case "R3500":
+    case "R4000":
+    case "R4500":
+    case "R5000":
+    case "R6000":
+      return {
+        columns: [
+          { key: "salesDate", label: "Sales Date", minWidth: "120px" },
+          { key: "category", label: "Category", minWidth: "160px" },
+          { key: "description", label: "Description", minWidth: "220px" },
+          { key: "staff", label: "Staff", minWidth: "140px" },
+          { key: "marketSegment", label: "Market Segment", minWidth: "160px" },
+          { key: "quantity", label: "Qty", align: "right", minWidth: "90px" },
+          { key: "totalSales", label: "Total Sales", align: "right", minWidth: "140px" },
+        ],
+        rows: [],
+      };
 
     default:
       return {
         columns: [
-          { key: "report", label: "Report" },
-          { key: "remarks", label: "Remarks" },
+          { key: "date", label: "Date", minWidth: "100px" },
+          { key: "reference", label: "Reference", minWidth: "140px" },
+          { key: "description", label: "Description", minWidth: "220px" },
+          { key: "remarks", label: "Remarks", minWidth: "180px" },
         ],
         rows: [],
       };
@@ -900,8 +1237,7 @@ function buildLoanPreviewHtml({
   const mutedColor = isDark ? "#cbd5e1" : "#64748b";
   const iconBorder = isDark ? "rgba(226, 232, 240, 0.25)" : "#d8dfea";
 
- const theadHtml =
-  columns.some((c) => c.key === "newP")
+  const theadHtml = columns.some((c) => c.key === "newP")
     ? `
       <tr>
         <th rowspan="4">Date</th>
@@ -945,7 +1281,7 @@ function buildLoanPreviewHtml({
       </tr>
       <tr></tr>
     `
-    : columns
+    : `<tr>${columns
         .map((column) => {
           const widthStyle = column.minWidth
             ? ` style="min-width:${column.minWidth}"`
@@ -955,7 +1291,7 @@ function buildLoanPreviewHtml({
             column.label,
           )}</th>`;
         })
-        .join("");
+        .join("")}</tr>`;
 
   const tbodyHtml =
     rows.length > 0
@@ -1277,7 +1613,7 @@ function buildLoanPreviewHtml({
             <div class="table-wrap">
               <table>
                 <thead>
-                  <tr>${theadHtml}</tr>
+                  ${theadHtml}
                 </thead>
                 <tbody>
                   ${tbodyHtml}
