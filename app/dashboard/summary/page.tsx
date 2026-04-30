@@ -17,7 +17,7 @@ export default function SummaryPage() {
 }
 
 function SummaryContent() {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { theme } = useTheme();
 
   return (
