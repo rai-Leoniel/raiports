@@ -21,49 +21,29 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      if (
-        email.trim().toLowerCase() === 'admin@test.com' &&
-        password.trim() === 'admin123'
-      ) {
-        localStorage.setItem(
-          'raiports-current-user',
-          JSON.stringify({
-            id: 'default-user',
-            email: 'admin@test.com',
-            name: 'Admin',
-            fullName: 'Admin User',
-            role: 'admin',
-          })
-        );
+  try {
+    const result = await login({
+      email,
+      password,
+    });
 
-        window.location.href = '/dashboard';
-        return;
-      }
-
-      const result = await login({
-        email,
-        password,
-      });
-
-      if (!result.success) {
-        setError(result.message || 'Login failed.');
-        setLoading(false);
-        return;
-      }
-
-      router.push('/dashboard');
-    } catch {
-      setError('Login failed.');
+    if (!result.success) {
+      setError(result.message || 'Login failed.');
       setLoading(false);
+      return;
     }
-  };
 
+    router.push('/dashboard');
+  } catch {
+    setError('Login failed.');
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(30,64,175,0.16),_transparent_28%)]" />
