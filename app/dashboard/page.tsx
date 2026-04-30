@@ -71,14 +71,14 @@ const demoCategories: TransactionCategory[] = [
 
 export default function DashboardPage() {
   return (
-    <AuthGuard>
+   
       <DashboardContent />
-    </AuthGuard>
+   
   );
 }
 
 function DashboardContent() {
-  const { user, logout } = useAuth();
+
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -100,7 +100,6 @@ function DashboardContent() {
   };
 
   const handleSignOut = async () => {
-    logout();
     router.push('/login');
   };
 
@@ -254,7 +253,7 @@ function DashboardContent() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-            Welcome, {user?.fullName || user?.name || user?.email || 'User'}!
+            Welcome, !
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             Track approvals and monitor pending requests.
