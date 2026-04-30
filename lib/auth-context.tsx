@@ -61,6 +61,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const USERS_KEY = 'raiports-users';
 const CURRENT_USER_KEY = 'raiports-current-user';
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -97,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const newUser: StoredUser = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         email: data.email,
         password: data.password,
         name: data.name,
