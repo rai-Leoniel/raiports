@@ -98,7 +98,7 @@ export default function LoginPage() {
                   Welcome back
                 </p>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                  Sign in
+                  Sign in TEST
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400">
                   Enter your credentials to continue to your dashboard.
