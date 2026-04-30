@@ -81,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const email = data.email.trim().toLowerCase();
     const password = data.password.trim();
 
+    console.log('LOGIN INPUT:', email, password);
+
     if (email === 'admin@test.com' && password === 'admin123') {
       const safeUser: User = {
         id: 'default-user',
