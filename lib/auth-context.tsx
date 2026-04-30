@@ -73,19 +73,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+ useEffect(() => {
+  try {
+    const defaultUser: StoredUser = {
+      id: 'default-user',
+      email: 'admin@test.com',
+      password: 'admin123',
+      name: 'Admin',
+      fullName: 'Admin User',
+      role: 'admin',
+    };
 
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
-    } catch (error) {
-      console.error('Failed to load auth user:', error);
-    } finally {
-      setLoading(false);
+    const existingUsers: StoredUser[] = JSON.parse(
+      localStorage.getItem(USERS_KEY) || '[]'
+    );
+
+    const hasDefaultUser = existingUsers.some(
+      (u) => u.email.toLowerCase() === defaultUser.email.toLowerCase()
+    );
+
+    if (!hasDefaultUser) {
+      localStorage.setItem(
+        USERS_KEY,
+        JSON.stringify([...existingUsers, defaultUser])
+      );
     }
-  }, []);
+
+    const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  } catch (error) {
+    console.error('Failed to load auth user:', error);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const signup = async (
     data: SignupData
