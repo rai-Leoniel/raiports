@@ -84,20 +84,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: 'admin',
     };
 
-    const existingUsers: StoredUser[] = JSON.parse(
-      localStorage.getItem(USERS_KEY) || '[]'
-    );
+    let existingUsers: StoredUser[] = [];
 
-    const hasDefaultUser = existingUsers.some(
-      (u) => u.email.toLowerCase() === defaultUser.email.toLowerCase()
-    );
-
-    if (!hasDefaultUser) {
-      localStorage.setItem(
-        USERS_KEY,
-        JSON.stringify([...existingUsers, defaultUser])
-      );
+    try {
+      const raw = localStorage.getItem(USERS_KEY);
+      existingUsers = raw ? JSON.parse(raw) : [];
+    } catch {
+      localStorage.removeItem(USERS_KEY);
+      existingUsers = [];
     }
+
+    const usersWithoutDefault = existingUsers.filter(
+      (u) => u.email.toLowerCase() !== defaultUser.email.toLowerCase()
+    );
+
+    const updatedUsers = [...usersWithoutDefault, defaultUser];
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
 
     const savedUser = localStorage.getItem(CURRENT_USER_KEY);
 
