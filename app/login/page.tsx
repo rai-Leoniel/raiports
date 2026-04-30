@@ -23,6 +23,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    alert(`Email: ${email} Password: ${password}`);
     setLoading(true);
     setError('');
 
