@@ -100,7 +100,7 @@ function DashboardContent() {
   };
 
   const handleSignOut = async () => {
-    router.push('/login');
+    router.push('/dashboard');
   };
 
   const handleCategoryClick = (categoryName: string) => {
