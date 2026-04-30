@@ -159,42 +159,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (
-    data: LoginData
-  ): Promise<{ success: boolean; message?: string }> => {
+  data: LoginData
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const defaultUser: StoredUser = {
+      id: 'default-user',
+      email: 'admin@test.com',
+      password: 'admin123',
+      name: 'Admin',
+      fullName: 'Admin User',
+      role: 'admin',
+    };
+
+    let existingUsers: StoredUser[] = [];
+
     try {
-      const existingUsers: StoredUser[] = JSON.parse(
-        localStorage.getItem(USERS_KEY) || '[]'
-      );
-
-      const matchedUser = existingUsers.find(
-        (u) =>
-          u.email.toLowerCase() === data.email.toLowerCase() &&
-          u.password === data.password
-      );
-
-      if (!matchedUser) {
-        return { success: false, message: 'Invalid email or password.' };
-      }
-
-      const safeUser: User = {
-        id: matchedUser.id,
-        email: matchedUser.email,
-        name: matchedUser.name,
-        fullName: matchedUser.fullName,
-        department: matchedUser.department,
-        company: matchedUser.company,
-        role: matchedUser.role,
-      };
-
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
-      setUser(safeUser);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: 'Something went wrong during login.' };
+      const raw = localStorage.getItem(USERS_KEY);
+      existingUsers = raw ? JSON.parse(raw) : [];
+    } catch {
+      localStorage.removeItem(USERS_KEY);
+      existingUsers = [];
     }
-  };
+
+    const hasDefaultUser = existingUsers.some(
+      (u) => u.email.toLowerCase() === defaultUser.email.toLowerCase()
+    );
+
+    const users = hasDefaultUser
+      ? existingUsers
+      : [...existingUsers, defaultUser];
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    const matchedUser = users.find(
+      (u) =>
+        u.email.toLowerCase() === data.email.toLowerCase() &&
+        u.password === data.password
+    );
+
+    if (!matchedUser) {
+      return { success: false, message: 'Invalid email or password.' };
+    }
+
+    const safeUser: User = {
+      id: matchedUser.id,
+      email: matchedUser.email,
+      name: matchedUser.name,
+      fullName: matchedUser.fullName,
+      department: matchedUser.department,
+      company: matchedUser.company,
+      role: matchedUser.role,
+    };
+
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
+    setUser(safeUser);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Something went wrong during login.' };
+  }
+};
 
   const logout = () => {
     localStorage.removeItem(CURRENT_USER_KEY);
