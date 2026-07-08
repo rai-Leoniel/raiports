@@ -16,6 +16,7 @@ type User = {
   department?: string;
   company?: string;
   role?: string;
+  branch?: string;
 };
 
 type SignupData = {
@@ -49,6 +50,11 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const CURRENT_USER_KEY = 'raiports-current-user';
+const ACCESS_TOKEN_KEY = 'raiports-access-token';
+const REFRESH_TOKEN_KEY = 'raiports-refresh-token';
+
+// Same backend your mobile app already talks to.
+const API_URL = 'http://raireports-api.duckdns.org/api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -71,38 +77,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (): Promise<{ success: boolean; message?: string }> => {
     return {
       success: false,
-      message: 'Signup is disabled for this demo login.',
+      message: 'Signup is not available yet.',
     };
   };
 
   const login = async (
     data: LoginData
   ): Promise<{ success: boolean; message?: string }> => {
-    const email = data.email.trim().toLowerCase();
+    // NOTE: The login form's field is labeled "User ID" even though the
+    // variable is historically called "email" -- we send it as `uid` to
+    // match the same /auth/login/uid/ endpoint the mobile app uses.
+    const uid = data.email.trim();
     const password = data.password.trim();
 
-    console.log('LOGIN INPUT:', email, password);
+    try {
+      const res = await fetch(`${API_URL}/auth/login/uid/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, password }),
+      });
 
-    if (email === 'admin@test.com' && password === 'admin123') {
+      const result = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          message: result?.error || 'Invalid credentials.',
+        };
+      }
+
+      const apiUser = result.user || {};
+      const company = result.company || null;
+
       const safeUser: User = {
-        id: 'default-user',
-        email: 'admin@test.com',
-        name: 'Admin',
-        fullName: 'Admin User',
-        role: 'admin',
+        id: apiUser.uid || uid,
+        email: apiUser.email || '',
+        name: apiUser.firstname || apiUser.uid || uid,
+        fullName: `${apiUser.firstname || ''} ${apiUser.lastname || ''}`.trim(),
+        company: company?.comp_name || '',
+        role: apiUser.account_type || '',
+        branch: apiUser.branch || '',
       };
 
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
+      localStorage.setItem(ACCESS_TOKEN_KEY, result.access || '');
+      localStorage.setItem(REFRESH_TOKEN_KEY, result.refresh || '');
+
       setUser(safeUser);
 
       return { success: true };
+    } catch (error) {
+      console.error('Login request failed:', error);
+      return {
+        success: false,
+        message: 'Could not reach the server. Please try again.',
+      };
     }
-
-    return { success: false, message: 'Invalid email or password.' };
   };
 
   const logout = () => {
     localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     setUser(null);
   };
 
